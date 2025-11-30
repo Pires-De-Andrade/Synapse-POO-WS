@@ -1,0 +1,131 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "dr.carlos@synapse.com",
+      "password": "psi123",
+      "user_type": "psychologist",
+      "name": "Dr. Carlos Mendes"
+    },
+    {
+      "id": 2,
+      "email": "admin@clinicabemestar.com",
+      "password": "admin123",
+      "user_type": "clinic",
+      "name": "Clínica Bem Estar"
+    },
+    {
+      "id": 3,
+      "email": "maria.silva@email.com",
+      "password": "senha123",
+      "user_type": "patient",
+      "name": "Maria Silva"
+    }
+  ],
+  "psychologists": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "Dr. Carlos Mendes",
+      "crp": "06/12345",
+      "specialty": "Terapia Cognitivo-Comportamental",
+      "themes": ["Ansiedade", "Depressão", "Síndrome do Pânico"],
+      "bio": "Especialista em TCC com 10 anos de experiência.",
+      "hourly_rate": 150.0,
+      "is_active": true
+    }
+  ],
+  "patients": [
+    {
+      "id": 3,
+      "name": "Maria Silva",
+      "email": "maria.silva@email.com",
+      "phone": "(11) 98765-4321",
+      "cpf": "123.456.789-00"
+    }
+  ],
+  "availabilities": [
+    {
+      "id": 1,
+      "psychologist_id": 1,
+      "day_of_week": 0,
+      "start_time": "14:00",
+      "end_time": "18:00",
+      "is_active": true
+    },
+    {
+      "id": 2,
+      "psychologist_id": 1,
+      "day_of_week": 1,
+      "start_time": "09:00",
+      "end_time": "13:00",
+      "is_active": true
+    },
+    {
+      "id": 3,
+      "psychologist_id": 1,
+      "day_of_week": 2,
+      "start_time": "14:00",
+      "end_time": "18:00",
+      "is_active": true
+    },
+    {
+      "id": 4,
+      "psychologist_id": 1,
+      "day_of_week": 3,
+      "start_time": "09:00",
+      "end_time": "12:00",
+      "is_active": true
+    },
+    {
+      "id": 5,
+      "psychologist_id": 1,
+      "day_of_week": 4,
+      "start_time": "14:00",
+      "end_time": "17:00",
+      "is_active": true
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1,
+      "patient_id": 3,
+      "psychologist_id": 1,
+      "date": "2025-12-01",
+      "time": "14:00",
+      "duration": 60,
+      "status": "scheduled",
+      "notes": "Primeira consulta"
+    }
+  ],
+  "clinics": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "name": "Clínica Bem Estar",
+      "address": "Rua das Flores, 123 - São Paulo, SP",
+      "phone": "(11) 3456-7890",
+      "email": "contato@mentesa.com.br"
+    }
+  ],
+  "leads": [
+    {
+      "id": 1,
+      "name": "Maria Oliveira",
+      "email": "maria@email.com",
+      "phone": "(11) 91234-5678",
+      "source": "website",
+      "status": "new",
+      "notes": null
+    },
+    {
+      "id": 2,
+      "name": "Carlos Souza",
+      "email": "carlos@email.com",
+      "phone": "(11) 93456-7890",
+      "source": "ai_chat",
+      "status": "contacted",
+      "notes": "Interessado em TCC"
+    }
+  ]
+}

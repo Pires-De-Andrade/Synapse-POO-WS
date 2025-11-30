@@ -1,0 +1,5 @@
+flask
+pydantic
+bcrypt
+pydantic[email]
+email-validator

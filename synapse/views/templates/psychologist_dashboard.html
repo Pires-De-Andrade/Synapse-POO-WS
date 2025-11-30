@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Minha Agenda - Psicólogo | Synapse{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="dashboard-header mb-4">
+            <div>
+                <h2 class="page-title mb-1">Minha Agenda</h2>
+                <p class="text-muted">Bem-vindo(a), {{ session.user_name }}</p>
+            </div>
+            <div>
+                <a href="{{ url_for('logout') }}" class="btn btn-vintage-outline">
+                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-primary">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="todayCount">-</h3>
+                            <p>Consultas Hoje</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-success">
+                            <i class="bi bi-calendar-week"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="weekCount">-</h3>
+                            <p>Esta Semana</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-accent">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="patientsCount">-</h3>
+                            <p>Total de Pacientes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Próximas Consultas -->
+            <div class="col-lg-8">
+                <div class="card card-vintage">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-calendar-event me-2"></i>Próximas Consultas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="appointmentsList">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="text-muted mt-2">Carregando consultas...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="col-lg-4">
+                <div class="card card-vintage">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-lightning me-2"></i>Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-vintage-outline w-100 mb-3" onclick="loadDashboard()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Atualizar Dados
+                        </button>
+                        <button class="btn btn-vintage-primary w-100" disabled>
+                            <i class="bi bi-gear me-2"></i>Configurar Horários
+                        </button>
+                        <p class="small text-muted mt-2 mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Configuração de horários disponível em breve.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const userId = {{ session.user_id }};
+
+document.addEventListener('DOMContentLoaded', loadDashboard);
+
+async function loadDashboard() {
+    try {
+        const response = await fetch('/api/appointments');
+        const result = await response.json();
+        const appointments = result.data?.items || result.data || result;
+        
+        // Filtrar apenas as consultas deste psicólogo
+        const myAppointments = appointments.filter(a => a.psychologist_id === userId);
+        
+        // Calcular estatísticas
+        const today = new Date().toISOString().split('T')[0];
+        const todayAppts = myAppointments.filter(a => a.date === today);
+        const uniquePatients = new Set(myAppointments.map(a => a.patient_id));
+        
+        document.getElementById('todayCount').textContent = todayAppts.length;
+        document.getElementById('weekCount').textContent = myAppointments.length;
+        document.getElementById('patientsCount').textContent = uniquePatients.size;
+        
+        // Renderizar lista de consultas
+        const listEl = document.getElementById('appointmentsList');
+        
+        if (myAppointments.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Nenhuma consulta agendada</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Ordenar por data/hora
+        myAppointments.sort((a, b) => {
+            const dateA = new Date(a.date + 'T' + a.time);
+            const dateB = new Date(b.date + 'T' + b.time);
+            return dateA - dateB;
+        });
+        
+        listEl.innerHTML = myAppointments.map(a => `
+            <div class="appointment-item">
+                <div class="appointment-datetime">
+                    <span class="appointment-date">${formatDate(a.date)}</span>
+                    <span class="appointment-time">${a.time.substring(0, 5)}</span>
+                </div>
+                <div class="appointment-info">
+                    <span class="appointment-patient">Paciente #${a.patient_id}</span>
+                    <span class="appointment-duration">${a.duration || 60} min</span>
+                </div>
+                <div class="appointment-status">
+                    <span class="badge badge-${getStatusClass(a.status)}">${translateStatus(a.status)}</span>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar dashboard:', error);
+        document.getElementById('appointmentsList').innerHTML = 
+            '<p class="text-danger text-center">Erro ao carregar dados.</p>';
+    }
+}
+
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'scheduled': 'primary',
+        'completed': 'success',
+        'cancelled': 'danger',
+        'pending': 'warning'
+    };
+    return classes[status] || 'secondary';
+}
+
+function translateStatus(status) {
+    const translations = {
+        'scheduled': 'Agendada',
+        'completed': 'Concluída',
+        'cancelled': 'Cancelada',
+        'pending': 'Pendente'
+    };
+    return translations[status] || status;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Agendar Consulta | Synapse{% endblock %}
+
+{% block content %}
+<div class="booking-page">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="page-title">Agendar Nova Consulta</h2>
+                    <p class="page-subtitle">Olá, {{ session.user_name }}! Escolha seu psicólogo e horário preferidos.</p>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="booking-progress mb-4">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Psicólogo</div>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Data e Hora</div>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Confirmação</div>
+                    </div>
+                </div>
+
+                <div class="card card-vintage">
+                    <div class="card-body p-4">
+                        <!-- Step 1: Escolher Psicólogo -->
+                        <div id="step1" class="booking-step">
+                            <h4 class="step-title"><i class="bi bi-person-circle me-2"></i>Escolha seu Psicólogo</h4>
+                            <div class="row g-3" id="psychologistsList">
+                                <div class="col-12 text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                    <p class="text-muted mt-2">Carregando psicólogos...</p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button id="btnStep1Next" class="btn btn-vintage-primary w-100" disabled>
+                                    Continuar <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Escolher Data e Horário -->
+                        <div id="step2" class="booking-step d-none">
+                            <h4 class="step-title"><i class="bi bi-calendar-event me-2"></i>Escolha Data e Horário</h4>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Data da Consulta</label>
+                                    <input type="date" id="appointmentDate" class="form-control form-control-lg">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Horários Disponíveis</label>
+                                    <div id="timeSlots" class="time-slots-grid">
+                                        <p class="text-muted">Selecione uma data primeiro</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 d-flex gap-3">
+                                <button id="btnStep2Back" class="btn btn-vintage-outline flex-fill">
+                                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                                </button>
+                                <button id="btnStep2Next" class="btn btn-vintage-primary flex-fill" disabled>
+                                    Continuar <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Confirmação -->
+                        <div id="step3" class="booking-step d-none">
+                            <h4 class="step-title"><i class="bi bi-clipboard-check me-2"></i>Confirmar Agendamento</h4>
+                            
+                            <div class="confirmation-card">
+                                <div class="confirmation-item">
+                                    <span class="confirmation-label">Psicólogo:</span>
+                                    <span class="confirmation-value" id="confirmPsychologist">-</span>
+                                </div>
+                                <div class="confirmation-item">
+                                    <span class="confirmation-label">Data:</span>
+                                    <span class="confirmation-value" id="confirmDate">-</span>
+                                </div>
+                                <div class="confirmation-item">
+                                    <span class="confirmation-label">Horário:</span>
+                                    <span class="confirmation-value" id="confirmTime">-</span>
+                                </div>
+                                <div class="confirmation-item">
+                                    <span class="confirmation-label">Paciente:</span>
+                                    <span class="confirmation-value">{{ session.user_name }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Observações (opcional)</label>
+                                <textarea id="notes" class="form-control" rows="3" 
+                                          placeholder="Ex: Primeira consulta, preferência por temas específicos..."></textarea>
+                            </div>
+
+                            <div class="mt-4 d-flex gap-3">
+                                <button id="btnStep3Back" class="btn btn-vintage-outline flex-fill">
+                                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                                </button>
+                                <button id="btnConfirm" class="btn btn-vintage-success flex-fill">
+                                    <i class="bi bi-check-circle me-2"></i>Confirmar Agendamento
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sucesso -->
+                        <div id="stepSuccess" class="booking-step d-none text-center py-4">
+                            <div class="success-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <h3 class="text-success mt-3">Consulta Agendada!</h3>
+                            <p class="text-muted">Sua consulta foi agendada com sucesso. Você receberá uma confirmação.</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-vintage-primary mt-3">
+                                <i class="bi bi-house me-2"></i>Voltar ao Início
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Estado do booking
+let selectedPsychologist = null;
+let selectedPsychologistName = '';
+let selectedDate = null;
+let selectedTime = null;
+
+// Configurar data mínima como hoje
+document.getElementById('appointmentDate').min = new Date().toISOString().split('T')[0];
+
+// Carregar psicólogos ao iniciar
+document.addEventListener('DOMContentLoaded', loadPsychologists);
+
+async function loadPsychologists() {
+    try {
+        const response = await fetch('/api/psychologists');
+        const result = await response.json();
+        const psychologists = result.data?.items || result.data || result;
+        
+        const container = document.getElementById('psychologistsList');
+        container.innerHTML = '';
+        
+        const activePsychologists = psychologists.filter(p => p.is_active);
+        
+        if (activePsychologists.length === 0) {
+            container.innerHTML = '<div class="col-12"><p class="text-muted text-center">Nenhum psicólogo disponível no momento.</p></div>';
+            return;
+        }
+        
+        activePsychologists.forEach(p => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
+            col.innerHTML = `
+                <div class="psychologist-card" data-id="${p.id}" data-name="${p.name}">
+                    <div class="psychologist-avatar">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="psychologist-info">
+                        <h5>${p.name}</h5>
+                        <p class="text-muted mb-1">${p.specialty || 'Psicologia Clínica'}</p>
+                        <small class="text-muted">CRP: ${p.crp || 'N/A'}</small>
+                    </div>
+                    <div class="psychologist-check">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+        });
+        
+        // Adicionar eventos de seleção
+        document.querySelectorAll('.psychologist-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.psychologist-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedPsychologist = parseInt(this.dataset.id);
+                selectedPsychologistName = this.dataset.name;
+                document.getElementById('btnStep1Next').disabled = false;
+            });
+        });
+    } catch (error) {
+        console.error('Erro ao carregar psicólogos:', error);
+        document.getElementById('psychologistsList').innerHTML = 
+            '<div class="col-12"><p class="text-danger text-center">Erro ao carregar psicólogos. Tente novamente.</p></div>';
+    }
+}
+
+// Step 1 -> Step 2
+document.getElementById('btnStep1Next').addEventListener('click', function() {
+    document.getElementById('step1').classList.add('d-none');
+    document.getElementById('step2').classList.remove('d-none');
+    updateProgress(2);
+});
+
+// Step 2 -> Step 1
+document.getElementById('btnStep2Back').addEventListener('click', function() {
+    document.getElementById('step2').classList.add('d-none');
+    document.getElementById('step1').classList.remove('d-none');
+    updateProgress(1);
+});
+
+// Carregar horários quando data é selecionada
+document.getElementById('appointmentDate').addEventListener('change', async function() {
+    selectedDate = this.value;
+    selectedTime = null;
+    document.getElementById('btnStep2Next').disabled = true;
+    
+    if (!selectedDate) return;
+    
+    const slotsContainer = document.getElementById('timeSlots');
+    slotsContainer.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div> Carregando...</div>';
+    
+    try {
+        const response = await fetch('/api/appointments/available-slots', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                psychologist_id: selectedPsychologist,
+                date: selectedDate
+            })
+        });
+        
+        const result = await response.json();
+        const times = result.data?.available_times || result.available_times || [];
+        
+        slotsContainer.innerHTML = '';
+        
+        if (times.length === 0) {
+            slotsContainer.innerHTML = '<p class="text-muted">Nenhum horário disponível nesta data.</p>';
+            return;
+        }
+        
+        times.forEach(time => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'time-slot-btn';
+            btn.textContent = time;
+            btn.dataset.time = time;
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedTime = this.dataset.time;
+                document.getElementById('btnStep2Next').disabled = false;
+            });
+            slotsContainer.appendChild(btn);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar horários:', error);
+        slotsContainer.innerHTML = '<p class="text-danger">Erro ao carregar horários.</p>';
+    }
+});
+
+// Step 2 -> Step 3
+document.getElementById('btnStep2Next').addEventListener('click', function() {
+    document.getElementById('step2').classList.add('d-none');
+    document.getElementById('step3').classList.remove('d-none');
+    updateProgress(3);
+    
+    // Preencher confirmação
+    document.getElementById('confirmPsychologist').textContent = selectedPsychologistName;
+    document.getElementById('confirmDate').textContent = formatDate(selectedDate);
+    document.getElementById('confirmTime').textContent = selectedTime;
+});
+
+// Step 3 -> Step 2
+document.getElementById('btnStep3Back').addEventListener('click', function() {
+    document.getElementById('step3').classList.add('d-none');
+    document.getElementById('step2').classList.remove('d-none');
+    updateProgress(2);
+});
+
+// Confirmar agendamento
+document.getElementById('btnConfirm').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Agendando...';
+    
+    try {
+        const response = await fetch('/api/appointments', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                patient_id: {{ session.user_id }},
+                psychologist_id: selectedPsychologist,
+                date: selectedDate,
+                time: selectedTime,
+                duration: 60,
+                notes: document.getElementById('notes').value || null
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('step3').classList.add('d-none');
+            document.getElementById('stepSuccess').classList.remove('d-none');
+            updateProgress(4);
+        } else {
+            let errorMessage = 'Erro ao agendar consulta';
+            
+            if (result.message) {
+                errorMessage = result.message;
+            } else if (result.error) {
+                if (typeof result.error === 'string') {
+                    errorMessage = result.error;
+                } else if (result.error.message) {
+                    errorMessage = result.error.message;
+                }
+            }
+            
+            throw new Error(errorMessage);
+        }
+    } catch (error) {
+        console.error('Erro completo:', error);
+        alert('Erro: ' + error.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Confirmar Agendamento';
+    }
+});
+
+function updateProgress(step) {
+    document.querySelectorAll('.progress-step').forEach((el, idx) => {
+        el.classList.remove('active', 'completed');
+        if (idx + 1 < step) el.classList.add('completed');
+        if (idx + 1 === step) el.classList.add('active');
+    });
+}
+
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+}
+</script>
+{% endblock %}

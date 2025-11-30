@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Clínica | Synapse{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="dashboard-header mb-4">
+            <div>
+                <h2 class="page-title mb-1">Dashboard Administrativo</h2>
+                <p class="text-muted">Visão geral da clínica</p>
+            </div>
+            <div>
+                <a href="{{ url_for('logout') }}" class="btn btn-vintage-outline">
+                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-success">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="leadsCount">-</h3>
+                            <p>Leads</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-primary">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="todayAppointments">-</h3>
+                            <p>Consultas Hoje</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-accent">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="activePsychologists">-</h3>
+                            <p>Psicólogos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-vintage card-stat">
+                    <div class="card-body">
+                        <div class="stat-icon stat-icon-warning">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="conversionRate">-</h3>
+                            <p>Taxa Conversão</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Leads Recentes -->
+            <div class="col-lg-6">
+                <div class="card card-vintage">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-people me-2"></i>Leads Recentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentLeads">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agenda Geral -->
+            <div class="col-lg-6">
+                <div class="card card-vintage">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-calendar-event me-2"></i>Agenda Geral
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="generalSchedule">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Psicólogos -->
+        <div class="row g-4 mt-2">
+            <div class="col-12">
+                <div class="card card-vintage">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-badge me-2"></i>Psicólogos da Clínica
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="psychologistsList" class="row g-3">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', loadDashboard);
+
+async function loadDashboard() {
+    try {
+        const [leadsRes, appointmentsRes, psychologistsRes] = await Promise.all([
+            fetch('/api/leads'),
+            fetch('/api/appointments'),
+            fetch('/api/psychologists')
+        ]);
+        
+        const leadsData = await leadsRes.json();
+        const appointmentsData = await appointmentsRes.json();
+        const psychologistsData = await psychologistsRes.json();
+        
+        const leads = leadsData.data?.items || leadsData.data || leadsData;
+        const appointments = appointmentsData.data?.items || appointmentsData.data || appointmentsData;
+        const psychologists = psychologistsData.data?.items || psychologistsData.data || psychologistsData;
+        
+        // Atualizar métricas
+        document.getElementById('leadsCount').textContent = leads.length;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('todayAppointments').textContent = 
+            appointments.filter(a => a.date === today).length;
+        
+        document.getElementById('activePsychologists').textContent = 
+            psychologists.filter(p => p.is_active).length;
+        
+        const converted = leads.filter(l => l.status === 'converted').length;
+        document.getElementById('conversionRate').textContent = 
+            leads.length > 0 ? Math.round((converted / leads.length) * 100) + '%' : '0%';
+        
+        // Renderizar leads
+        const leadsEl = document.getElementById('recentLeads');
+        if (leads.length === 0) {
+            leadsEl.innerHTML = '<p class="text-muted text-center">Nenhum lead registrado.</p>';
+        } else {
+            leadsEl.innerHTML = leads.slice(0, 5).map(l => `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <strong>${l.name}</strong>
+                        <small class="text-muted d-block">${l.email || 'Sem email'}</small>
+                    </div>
+                    <span class="badge badge-${getLeadStatusClass(l.status)}">${translateLeadStatus(l.status)}</span>
+                </div>
+            `).join('');
+        }
+        
+        // Renderizar agenda
+        const scheduleEl = document.getElementById('generalSchedule');
+        if (appointments.length === 0) {
+            scheduleEl.innerHTML = '<p class="text-muted text-center">Nenhuma consulta agendada.</p>';
+        } else {
+            const sortedAppointments = appointments.sort((a, b) => {
+                const dateA = new Date(a.date + 'T' + a.time);
+                const dateB = new Date(b.date + 'T' + b.time);
+                return dateA - dateB;
+            });
+            
+            scheduleEl.innerHTML = sortedAppointments.slice(0, 5).map(a => `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <strong>${formatDate(a.date)}</strong>
+                        <small class="text-muted d-block">${a.time.substring(0, 5)} - Psicólogo #${a.psychologist_id}</small>
+                    </div>
+                    <span class="badge badge-${getStatusClass(a.status)}">${translateStatus(a.status)}</span>
+                </div>
+            `).join('');
+        }
+        
+        // Renderizar psicólogos
+        const psychsEl = document.getElementById('psychologistsList');
+        psychsEl.innerHTML = psychologists.map(p => `
+            <div class="col-md-4">
+                <div class="psychologist-mini-card">
+                    <div class="psychologist-mini-avatar">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="psychologist-mini-info">
+                        <h6>${p.name}</h6>
+                        <small class="text-muted">${p.specialty || 'Psicologia'}</small>
+                        <span class="badge badge-${p.is_active ? 'success' : 'secondary'} mt-1">
+                            ${p.is_active ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar dashboard:', error);
+    }
+}
+
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+function getStatusClass(status) {
+    return { 'scheduled': 'primary', 'completed': 'success', 'cancelled': 'danger' }[status] || 'secondary';
+}
+
+function translateStatus(status) {
+    return { 'scheduled': 'Agendada', 'completed': 'Concluída', 'cancelled': 'Cancelada' }[status] || status;
+}
+
+function getLeadStatusClass(status) {
+    return { 'new': 'primary', 'contacted': 'warning', 'converted': 'success' }[status] || 'secondary';
+}
+
+function translateLeadStatus(status) {
+    return { 'new': 'Novo', 'contacted': 'Contatado', 'converted': 'Convertido' }[status] || status;
+}
+</script>
+{% endblock %}
