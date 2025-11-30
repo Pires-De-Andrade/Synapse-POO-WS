@@ -14,12 +14,12 @@
 **POST** `/api/auth/login`
 
 **Body:**
-\`\`\`json
+```json
 {
   "email": "maria.silva@email.com",
   "password": "senha123"
 }
-\`\`\`
+```
 
 **Explicação:** Autentica um paciente no sistema.
 
@@ -29,12 +29,12 @@
 **POST** `/api/auth/login`
 
 **Body:**
-\`\`\`json
+```json
 {
   "email": "carlos.oliveira@psi.com",
   "password": "psi123"
 }
-\`\`\`
+```
 
 **Explicação:** Autentica um psicólogo no sistema.
 
@@ -44,12 +44,12 @@
 **POST** `/api/auth/login`
 
 **Body:**
-\`\`\`json
+```json
 {
   "email": "contato@clinicaexemplo.com",
   "password": "clinic123"
 }
-\`\`\`
+```
 
 **Explicação:** Autentica uma clínica no sistema.
 
@@ -79,14 +79,14 @@
 **POST** `/api/patients`
 
 **Body:**
-\`\`\`json
+```json
 {
   "name": "João Silva",
   "email": "joao.silva@email.com",
   "phone": "(11) 98765-4321",
   "cpf": "123.456.789-00"
 }
-\`\`\`
+```
 
 **Explicação:** Cria um novo paciente no sistema.
 
@@ -96,12 +96,12 @@
 **PUT** `/api/patients/3`
 
 **Body:**
-\`\`\`json
+```json
 {
   "name": "Maria Silva Santos",
   "phone": "(11) 99999-8888"
 }
-\`\`\`
+```
 
 **Explicação:** Atualiza dados de um paciente existente (todos campos opcionais).
 
@@ -109,8 +109,6 @@
 
 ### 2.5 Deletar Paciente
 **DELETE** `/api/patients/3`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Remove um paciente do sistema.
 
@@ -149,7 +147,7 @@
 **POST** `/api/psychologists`
 
 **Body:**
-\`\`\`json
+```json
 {
   "user_id": 2,
   "name": "Dr. Carlos Oliveira",
@@ -159,7 +157,7 @@
   "themes": ["Ansiedade", "Depressão", "Relacionamentos"],
   "bio": "Psicólogo com 10 anos de experiência"
 }
-\`\`\`
+```
 
 **Explicação:** Cria um novo psicólogo no sistema.
 
@@ -169,12 +167,12 @@
 **PUT** `/api/psychologists/1`
 
 **Body:**
-\`\`\`json
+```json
 {
   "hourly_rate": 250.00,
   "bio": "Psicólogo com 15 anos de experiência"
 }
-\`\`\`
+```
 
 **Explicação:** Atualiza dados de um psicólogo (todos campos opcionais).
 
@@ -183,8 +181,6 @@
 ### 3.6 Deletar Psicólogo
 **DELETE** `/api/psychologists/1`
 
-**Headers:** `Content-Type: application/json`
-
 **Explicação:** Remove um psicólogo do sistema.
 
 ---
@@ -192,16 +188,12 @@
 ### 3.7 Ativar Psicólogo
 **PATCH** `/api/psychologists/1/activate`
 
-**Headers:** `Content-Type: application/json`
-
 **Explicação:** Marca um psicólogo como ativo.
 
 ---
 
 ### 3.8 Desativar Psicólogo
 **PATCH** `/api/psychologists/1/deactivate`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Marca um psicólogo como inativo.
 
@@ -212,16 +204,12 @@
 ### 4.1 Listar Todas as Consultas
 **GET** `/api/appointments`
 
-**Headers:** `Content-Type: application/json`
-
 **Explicação:** Retorna lista de todos os agendamentos.
 
 ---
 
 ### 4.2 Filtrar Consultas por Paciente
 **GET** `/api/appointments?patient_id=3`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Retorna agendamentos de um paciente específico.
 
@@ -230,16 +218,12 @@
 ### 4.3 Filtrar Consultas por Psicólogo
 **GET** `/api/appointments?psychologist_id=1`
 
-**Headers:** `Content-Type: application/json`
-
 **Explicação:** Retorna agendamentos de um psicólogo específico.
 
 ---
 
 ### 4.4 Buscar Consulta por ID
 **GET** `/api/appointments/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Retorna dados de uma consulta específica.
 
@@ -249,15 +233,15 @@
 **POST** `/api/appointments/available-slots`
 
 **Body:**
-\`\`\`json
+```json
 {
   "psychologist_id": 1,
   "date": "2025-12-03",
   "duration": 60
 }
-\`\`\`
+```
 
-**Explicação:** Lista todos os horários disponíveis para agendamento em uma data.
+**Explicação:** Lista horários disponíveis para uma data.
 
 ---
 
@@ -265,7 +249,7 @@
 **POST** `/api/appointments`
 
 **Body:**
-\`\`\`json
+```json
 {
   "patient_id": 3,
   "psychologist_id": 1,
@@ -274,9 +258,9 @@
   "duration": 60,
   "notes": "Primeira consulta"
 }
-\`\`\`
+```
 
-**Explicação:** Agenda uma nova consulta validando disponibilidade e conflitos.
+**Explicação:** Cria um novo agendamento.
 
 ---
 
@@ -284,20 +268,18 @@
 **PATCH** `/api/appointments/1/cancel`
 
 **Body:**
-\`\`\`json
+```json
 {
   "cancellation_reason": "Imprevisto pessoal"
 }
-\`\`\`
+```
 
-**Explicação:** Cancela uma consulta agendada.
+**Explicação:** Cancela uma consulta.
 
 ---
 
 ### 4.8 Marcar Consulta como Concluída
 **PATCH** `/api/appointments/1/complete`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Marca uma consulta como realizada.
 
@@ -305,8 +287,6 @@
 
 ### 4.9 Deletar Consulta
 **DELETE** `/api/appointments/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Remove uma consulta do sistema.
 
@@ -317,8 +297,6 @@
 ### 5.1 Listar Todas as Disponibilidades
 **GET** `/api/availabilities`
 
-**Headers:** `Content-Type: application/json`
-
 **Explicação:** Retorna todas as disponibilidades cadastradas.
 
 ---
@@ -326,16 +304,12 @@
 ### 5.2 Filtrar Disponibilidades por Psicólogo
 **GET** `/api/availabilities?psychologist_id=1`
 
-**Headers:** `Content-Type: application/json`
-
-**Explicação:** Retorna disponibilidades de um psicólogo específico.
+**Explicação:** Retorna disponibilidades de um psicólogo.
 
 ---
 
 ### 5.3 Buscar Disponibilidades de um Psicólogo
 **GET** `/api/availabilities/psychologist/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Retorna todas as disponibilidades de um psicólogo.
 
@@ -343,8 +317,6 @@
 
 ### 5.4 Buscar Disponibilidade por ID
 **GET** `/api/availabilities/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Retorna dados de uma disponibilidade específica.
 
@@ -354,16 +326,16 @@
 **POST** `/api/availabilities`
 
 **Body:**
-\`\`\`json
+```json
 {
   "psychologist_id": 1,
   "day_of_week": 1,
   "start_time": "14:00",
   "end_time": "18:00"
 }
-\`\`\`
+```
 
-**Explicação:** Cria horário de disponibilidade (0=Segunda, 6=Domingo).
+**Explicação:** Cria um horário de disponibilidade (0 = Segunda, 6 = Domingo).
 
 ---
 
@@ -371,21 +343,19 @@
 **PUT** `/api/availabilities/1`
 
 **Body:**
-\`\`\`json
+```json
 {
   "start_time": "13:00",
   "end_time": "19:00"
 }
-\`\`\`
+```
 
-**Explicação:** Atualiza horários de uma disponibilidade (campos opcionais).
+**Explicação:** Atualiza horários de uma disponibilidade.
 
 ---
 
 ### 5.7 Deletar Disponibilidade
 **DELETE** `/api/availabilities/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Remove uma disponibilidade do sistema.
 
@@ -394,18 +364,14 @@
 ### 5.8 Ativar Disponibilidade
 **PATCH** `/api/availabilities/1/activate`
 
-**Headers:** `Content-Type: application/json`
-
-**Explicação:** Marca uma disponibilidade como ativa.
+**Explicação:** Ativa uma disponibilidade.
 
 ---
 
 ### 5.9 Desativar Disponibilidade
 **PATCH** `/api/availabilities/1/deactivate`
 
-**Headers:** `Content-Type: application/json`
-
-**Explicação:** Marca uma disponibilidade como inativa.
+**Explicação:** Desativa uma disponibilidade.
 
 ---
 
@@ -414,16 +380,12 @@
 ### 6.1 Listar Todas as Clínicas
 **GET** `/api/clinics`
 
-**Headers:** `Content-Type: application/json`
-
-**Explicação:** Retorna lista de todas as clínicas cadastradas.
+**Explicação:** Retorna todas as clínicas cadastradas.
 
 ---
 
 ### 6.2 Buscar Clínica por ID
 **GET** `/api/clinics/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Retorna dados de uma clínica específica.
 
@@ -433,7 +395,7 @@
 **POST** `/api/clinics`
 
 **Body:**
-\`\`\`json
+```json
 {
   "user_id": 4,
   "name": "Clínica Saúde Mental",
@@ -441,7 +403,7 @@
   "phone": "(11) 3333-4444",
   "email": "contato@clinicasaude.com"
 }
-\`\`\`
+```
 
 **Explicação:** Cria uma nova clínica no sistema.
 
@@ -451,21 +413,19 @@
 **PUT** `/api/clinics/1`
 
 **Body:**
-\`\`\`json
+```json
 {
   "phone": "(11) 4444-5555",
   "address": "Rua Nova, 456"
 }
-\`\`\`
+```
 
-**Explicação:** Atualiza dados de uma clínica (todos campos opcionais).
+**Explicação:** Atualiza dados de uma clínica.
 
 ---
 
 ### 6.5 Deletar Clínica
 **DELETE** `/api/clinics/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Remove uma clínica do sistema.
 
@@ -476,16 +436,12 @@
 ### 7.1 Listar Todos os Leads
 **GET** `/api/leads`
 
-**Headers:** `Content-Type: application/json`
-
-**Explicação:** Retorna lista de todos os leads cadastrados.
+**Explicação:** Retorna lista de todos os leads.
 
 ---
 
 ### 7.2 Buscar Lead por ID
 **GET** `/api/leads/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Retorna dados de um lead específico.
 
@@ -495,7 +451,7 @@
 **POST** `/api/leads`
 
 **Body:**
-\`\`\`json
+```json
 {
   "name": "Ana Costa",
   "email": "ana.costa@email.com",
@@ -503,7 +459,7 @@
   "source": "Instagram",
   "notes": "Interessada em terapia para ansiedade"
 }
-\`\`\`
+```
 
 **Explicação:** Cria um novo lead no sistema.
 
@@ -513,21 +469,19 @@
 **PUT** `/api/leads/1`
 
 **Body:**
-\`\`\`json
+```json
 {
   "phone": "(11) 98888-7777",
   "notes": "Contato realizado"
 }
-\`\`\`
+```
 
-**Explicação:** Atualiza dados de um lead (todos campos opcionais).
+**Explicação:** Atualiza dados de um lead.
 
 ---
 
 ### 7.5 Deletar Lead
 **DELETE** `/api/leads/1`
-
-**Headers:** `Content-Type: application/json`
 
 **Explicação:** Remove um lead do sistema.
 
@@ -537,13 +491,13 @@
 **PATCH** `/api/leads/1/contacted`
 
 **Body:**
-\`\`\`json
+```json
 {
   "notes": "Primeiro contato realizado por telefone"
 }
-\`\`\`
+```
 
-**Explicação:** Atualiza status do lead para contatado.
+**Explicação:** Atualiza o status do lead para contatado.
 
 ---
 
@@ -551,13 +505,13 @@
 **PATCH** `/api/leads/1/lost`
 
 **Body:**
-\`\`\`json
+```json
 {
   "reason": "Não respondeu após 3 tentativas"
 }
-\`\`\`
+```
 
-**Explicação:** Atualiza status do lead para perdido.
+**Explicação:** Marca lead como perdido.
 
 ---
 
@@ -565,11 +519,11 @@
 **PATCH** `/api/leads/1/convert`
 
 **Body:**
-\`\`\`json
+```json
 {
   "patient_id": 5
 }
-\`\`\`
+```
 
 **Explicação:** Converte o lead em paciente ativo.
 
@@ -578,7 +532,7 @@
 ## RESUMO DE ENDPOINTS
 
 | Recurso | GET (Listar) | GET (ID) | POST (Criar) | PUT (Atualizar) | DELETE | PATCH (Outros) |
-|---------|--------------|----------|--------------|-----------------|--------|----------------|
+|---------|--------------|----------|--------------|------------------|--------|----------------|
 | **Auth** | - | - | /login | - | - | - |
 | **Patients** | /patients | /patients/:id | /patients | /patients/:id | /patients/:id | - |
 | **Psychologists** | /psychologists | /psychologists/:id | /psychologists | /psychologists/:id | /psychologists/:id | /activate, /deactivate |
@@ -594,25 +548,23 @@
 ## DICAS PARA TESTES
 
 1. **Sequência recomendada:**
-   - Teste primeiro os GETs para ver dados existentes
-   - Depois teste POSTs para criar novos dados
-   - Por último teste PUTs, PATCHs e DELETEs
-
+   - Teste os GETs primeiro
+   - Depois POSTs
+   - Por último PUT, PATCH e DELETE
 2. **IDs válidos no seeds.json:**
-   - Paciente: 3 (Maria Silva)
-   - Psicólogo: 1 (Dr. Carlos)
-   - Disponibilidades: 1-5
-   - Consulta: 1
-
+   - Paciente: 3  
+   - Psicólogo: 1  
+   - Disponibilidades: 1–5  
+   - Consulta: 1  
 3. **Dias da semana:**
-   - 0 = Segunda-feira
-   - 1 = Terça-feira
-   - 2 = Quarta-feira
-   - 3 = Quinta-feira
-   - 4 = Sexta-feira
-   - 5 = Sábado
-   - 6 = Domingo
-
+   - 0 = Segunda  
+   - 1 = Terça  
+   - 2 = Quarta  
+   - 3 = Quinta  
+   - 4 = Sexta  
+   - 5 = Sábado  
+   - 6 = Domingo  
 4. **Formato de datas:**
-   - Data: `YYYY-MM-DD` (ex: `2025-12-03`)
-   - Hora: `HH:MM` (ex: `14:00`)
+   - Data: `YYYY-MM-DD`
+   - Hora: `HH:MM`
+
