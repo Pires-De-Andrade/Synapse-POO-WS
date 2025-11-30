@@ -1,13 +1,86 @@
-# Documentação de Endpoints - Synapse API
+# Documentação da API REST - Synapse
 
-## Formato Padrão de Respostas
+## Índice
+1. [Introdução à API REST](#introdução-à-api-rest)
+2. [Arquitetura RESTful](#arquitetura-restful)
+3. [Formato de Respostas](#formato-de-respostas)
+4. [Como Testar a API](#como-testar-a-api)
+5. [Endpoints por Recurso](#endpoints-por-recurso)
+   - [Autenticação](#autenticação)
+   - [Pacientes](#pacientes)
+   - [Psicólogos](#psicólogos)
+   - [Clínicas](#clínicas)
+   - [Disponibilidades](#disponibilidades)
+   - [Consultas](#consultas)
+   - [Leads](#leads)
+6. [Códigos de Status HTTP](#códigos-de-status-http)
+7. [Exemplos de Uso](#exemplos-de-uso)
 
-### Resposta de Sucesso
+---
+
+## Introdução à API REST
+
+### O que é uma API REST?
+
+**REST** (Representational State Transfer) é um estilo arquitetural para sistemas distribuídos que define como recursos são identificados e endereçados através de URLs e métodos HTTP.
+
+**Características principais:**
+- **Stateless**: Cada requisição é independente, não mantém estado de sessão
+- **Client-Server**: Separação clara entre cliente e servidor
+- **Recursos**: Tudo é tratado como recurso (pacientes, consultas, etc.)
+- **Métodos HTTP**: Usa verbos HTTP para operações (GET, POST, PUT, DELETE, PATCH)
+- **Representações JSON**: Dados trafegados em formato JSON
+
+### Por que REST?
+
+- **Simplicidade**: Usa protocolos web padrão (HTTP)
+- **Escalabilidade**: Facilita cache e balanceamento de carga
+- **Independência**: Qualquer cliente pode consumir (web, mobile, desktop)
+- **Interoperabilidade**: Funciona em qualquer plataforma
+
+---
+
+## Arquitetura RESTful
+
+### Métodos HTTP e Operações CRUD
+
+| Método HTTP | Operação | Descrição | Exemplo |
+|-------------|----------|-----------|---------|
+| **GET** | Read | Busca recursos | `GET /api/patients` |
+| **POST** | Create | Cria novo recurso | `POST /api/patients` |
+| **PUT** | Update | Atualiza recurso completo | `PUT /api/patients/1` |
+| **PATCH** | Partial Update | Atualiza parcialmente | `PATCH /api/appointments/1/cancel` |
+| **DELETE** | Delete | Remove recurso | `DELETE /api/patients/1` |
+
+### Estrutura de URLs
+
+\`\`\`
+/api/{recurso}              → Coleção (lista/criação)
+/api/{recurso}/{id}         → Item específico
+/api/{recurso}/{id}/{ação}  → Ação específica
+\`\`\`
+
+**Exemplos:**
+- `/api/patients` → Lista todos os pacientes
+- `/api/patients/3` → Busca o paciente com ID 3
+- `/api/appointments/5/cancel` → Cancela a consulta 5
+
+---
+
+## Formato de Respostas
+
+Todas as respostas seguem um formato padronizado para facilitar o tratamento de dados e erros.
+
+### Resposta de Sucesso (Item Único)
 \`\`\`json
 {
   "success": true,
-  "data": { ... },
-  "message": "Mensagem opcional"
+  "data": {
+    "id": 1,
+    "name": "João Silva",
+    "email": "joao@email.com"
+  },
+  "message": "Operação realizada com sucesso"
 }
 \`\`\`
 
@@ -16,8 +89,11 @@
 {
   "success": true,
   "data": {
-    "items": [ ... ],
-    "count": 10
+    "items": [
+      { "id": 1, "name": "João" },
+      { "id": 2, "name": "Maria" }
+    ],
+    "count": 2
   }
 }
 \`\`\`
@@ -27,27 +103,147 @@
 {
   "success": false,
   "error": {
-    "code": "ERROR_CODE",
-    "message": "Descrição do erro",
-    "field": "campo_opcional"
+    "code": "VALIDATION_ERROR",
+    "message": "Nome é obrigatório",
+    "field": "name"
   }
 }
 \`\`\`
 
-### Códigos de Erro
-| Código | HTTP | Descrição |
-|--------|------|-----------|
-| VALIDATION_ERROR | 400 | Dados de entrada inválidos |
-| NOT_FOUND | 404 | Recurso não encontrado |
-| CONFLICT | 409 | Conflito de recursos |
-| BUSINESS_RULE_VIOLATION | 422 | Regra de negócio violada |
+### Códigos de Erro Personalizados
+
+| Código | HTTP | Descrição | Quando Ocorre |
+|--------|------|-----------|---------------|
+| `VALIDATION_ERROR` | 400 | Dados inválidos | Campo obrigatório ausente, formato inválido |
+| `NOT_FOUND` | 404 | Recurso não encontrado | ID inexistente |
+| `CONFLICT` | 409 | Conflito de recursos | Horário já ocupado, email duplicado |
+| `BUSINESS_RULE_VIOLATION` | 422 | Regra de negócio violada | Psicólogo inativo, consulta fora do horário |
 
 ---
 
-## Auth
+## Como Testar a API
 
-### POST /api/auth/login
-Autentica um usuário no sistema.
+### 1. Executar o Servidor
+
+\`\`\`bash
+# Instalar dependências
+pip install -r requirements.txt
+
+# Executar o servidor Flask
+python main.py
+\`\`\`
+
+O servidor inicia em: `http://localhost:5000`
+
+### 2. Ferramentas para Testes
+
+#### **Opção A: Postman** (Recomendado)
+
+1. Baixe o [Postman](https://www.postman.com/downloads/)
+2. Crie uma nova requisição
+3. Configure:
+   - **Method**: GET, POST, PUT, DELETE, etc.
+   - **URL**: `http://localhost:5000/api/patients`
+   - **Headers**: `Content-Type: application/json`
+   - **Body** (para POST/PUT): JSON com os dados
+
+**Exemplo de requisição POST no Postman:**
+\`\`\`
+Method: POST
+URL: http://localhost:5000/api/patients
+Headers:
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "phone": "(11) 98765-4321",
+  "cpf": "123.456.789-00"
+}
+\`\`\`
+
+#### **Opção B: cURL** (Linha de comando)
+
+\`\`\`bash
+# GET - Listar todos os pacientes
+curl http://localhost:5000/api/patients
+
+# POST - Criar novo paciente
+curl -X POST http://localhost:5000/api/patients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "João Silva",
+    "email": "joao@email.com",
+    "phone": "(11) 98765-4321"
+  }'
+
+# GET - Buscar paciente específico
+curl http://localhost:5000/api/patients/1
+
+# PUT - Atualizar paciente
+curl -X PUT http://localhost:5000/api/patients/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name": "João Pedro Silva"}'
+
+# DELETE - Remover paciente
+curl -X DELETE http://localhost:5000/api/patients/1
+\`\`\`
+
+#### **Opção C: Navegador** (apenas GET)
+
+Para requisições GET, basta acessar diretamente no navegador:
+- `http://localhost:5000/api/patients`
+- `http://localhost:5000/api/psychologists`
+- `http://localhost:5000/health`
+
+#### **Opção D: Python requests**
+
+\`\`\`python
+import requests
+import json
+
+BASE_URL = "http://localhost:5000"
+
+# GET - Listar pacientes
+response = requests.get(f"{BASE_URL}/api/patients")
+print(response.json())
+
+# POST - Criar paciente
+data = {
+    "name": "João Silva",
+    "email": "joao@email.com",
+    "phone": "(11) 98765-4321"
+}
+response = requests.post(
+    f"{BASE_URL}/api/patients",
+    json=data,
+    headers={"Content-Type": "application/json"}
+)
+print(response.json())
+\`\`\`
+
+### 3. Dados de Teste Disponíveis
+
+O sistema já vem com dados pré-carregados no arquivo `synapse/seeds.json`:
+
+**Credenciais de Login:**
+- **Psicólogo**: `dra.ana@clinica.com` / `senha123`
+- **Clínica**: `clinica@contato.com` / `senha123`
+- **Paciente**: `maria@email.com` / `senha123`
+
+**IDs de Teste:**
+- Paciente ID: 3 (Maria Silva)
+- Psicólogo ID: 1 (Dr. Carlos)
+- Clínica ID: 1 (Clínica Esperança)
+
+---
+
+## Endpoints por Recurso
+
+### Autenticação
+
+#### `POST /api/auth/login`
+Autentica um usuário no sistema e retorna um token de sessão.
 
 **Request Body:**
 \`\`\`json
@@ -70,15 +266,22 @@ Autentica um usuário no sistema.
 }
 \`\`\`
 
-**Erros:**
-- 401: Credenciais inválidas
+**Possíveis Erros:**
+- `401 Unauthorized`: Credenciais inválidas
+
+**Teste com cURL:**
+\`\`\`bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "maria@email.com", "password": "senha123"}'
+\`\`\`
 
 ---
 
-## Patients
+### Pacientes
 
-### GET /api/patients
-Lista todos os pacientes.
+#### `GET /api/patients`
+Lista todos os pacientes cadastrados no sistema.
 
 **Response (200):**
 \`\`\`json
@@ -87,12 +290,12 @@ Lista todos os pacientes.
   "data": {
     "items": [
       {
-        "id": 1,
-        "name": "João Pedro Santos",
-        "email": "joao@email.com",
-        "phone": "(11) 98765-4321",
-        "cpf": "123.456.789-00",
-        "created_at": "2025-01-01T10:00:00"
+        "id": 3,
+        "name": "Maria Silva",
+        "email": "maria@email.com",
+        "phone": "(11) 91234-5678",
+        "cpf": "987.654.321-00",
+        "created_at": "2025-01-15T10:00:00"
       }
     ],
     "count": 1
@@ -100,29 +303,43 @@ Lista todos os pacientes.
 }
 \`\`\`
 
-### GET /api/patients/{id}
-Busca um paciente pelo ID.
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/api/patients
+\`\`\`
+
+---
+
+#### `GET /api/patients/{id}`
+Busca um paciente específico pelo ID.
 
 **Response (200):**
 \`\`\`json
 {
   "success": true,
   "data": {
-    "id": 1,
-    "name": "João Pedro Santos",
-    "email": "joao@email.com",
-    "phone": "(11) 98765-4321",
-    "cpf": "123.456.789-00",
-    "created_at": "2025-01-01T10:00:00"
+    "id": 3,
+    "name": "Maria Silva",
+    "email": "maria@email.com",
+    "phone": "(11) 91234-5678",
+    "cpf": "987.654.321-00",
+    "created_at": "2025-01-15T10:00:00"
   }
 }
 \`\`\`
 
-**Erros:**
-- 404: Paciente não encontrado
+**Possíveis Erros:**
+- `404 Not Found`: Paciente não encontrado
 
-### POST /api/patients
-Cria um novo paciente.
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/api/patients/3
+\`\`\`
+
+---
+
+#### `POST /api/patients`
+Cria um novo paciente no sistema.
 
 **Request Body:**
 \`\`\`json
@@ -134,20 +351,46 @@ Cria um novo paciente.
 }
 \`\`\`
 
+**Validações:**
+- `name`: Obrigatório, mínimo 3 caracteres
+- `email`: Obrigatório, formato válido
+- `phone`: Obrigatório, mínimo 10 caracteres
+- `cpf`: Opcional
+
 **Response (201):**
 \`\`\`json
 {
   "success": true,
-  "data": { ... },
+  "data": {
+    "id": 4,
+    "name": "João Pedro Santos",
+    "email": "joao@email.com",
+    "phone": "(11) 98765-4321",
+    "cpf": "123.456.789-00",
+    "created_at": "2025-12-01T14:30:00"
+  },
   "message": "Paciente criado com sucesso"
 }
 \`\`\`
 
-**Erros:**
-- 400: Dados inválidos (nome vazio, email inválido, telefone curto)
+**Possíveis Erros:**
+- `400 Validation Error`: Dados inválidos
 
-### PUT /api/patients/{id}
-Atualiza os dados de um paciente.
+**Teste:**
+\`\`\`bash
+curl -X POST http://localhost:5000/api/patients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "João Pedro Santos",
+    "email": "joao@email.com",
+    "phone": "(11) 98765-4321"
+  }'
+\`\`\`
+
+---
+
+#### `PUT /api/patients/{id}`
+Atualiza os dados de um paciente existente.
 
 **Request Body:**
 \`\`\`json
@@ -166,27 +409,43 @@ Atualiza os dados de um paciente.
 }
 \`\`\`
 
-**Erros:**
-- 404: Paciente não encontrado
-- 400: Dados inválidos
+**Possíveis Erros:**
+- `404 Not Found`: Paciente não encontrado
+- `400 Validation Error`: Dados inválidos
 
-### DELETE /api/patients/{id}
-Remove um paciente do sistema.
-
-**Response:** 204 No Content
-
-**Erros:**
-- 404: Paciente não encontrado
+**Teste:**
+\`\`\`bash
+curl -X PUT http://localhost:5000/api/patients/3 \
+  -H "Content-Type: application/json" \
+  -d '{"phone": "(11) 99999-9999"}'
+\`\`\`
 
 ---
 
-## Psychologists
+#### `DELETE /api/patients/{id}`
+Remove um paciente do sistema.
 
-### GET /api/psychologists
-Lista todos os psicólogos.
+**Response:** `204 No Content`
 
-**Query Params:**
-- `active_only` (boolean): Se true, retorna apenas psicólogos ativos
+**Possíveis Erros:**
+- `404 Not Found`: Paciente não encontrado
+
+**Teste:**
+\`\`\`bash
+curl -X DELETE http://localhost:5000/api/patients/4
+\`\`\`
+
+---
+
+### Psicólogos
+
+#### `GET /api/psychologists`
+Lista todos os psicólogos cadastrados.
+
+**Query Parameters:**
+- `active_only` (boolean): Se `true`, retorna apenas psicólogos ativos
+
+**Exemplo:** `/api/psychologists?active_only=true`
 
 **Response (200):**
 \`\`\`json
@@ -197,14 +456,14 @@ Lista todos os psicólogos.
       {
         "id": 1,
         "user_id": 1,
-        "name": "Dra. Ana Silva",
-        "crp": "06/12345",
-        "specialty": "TCC",
-        "themes": ["Ansiedade", "Depressão"],
-        "bio": "Especialista em TCC",
-        "hourly_rate": 150.0,
+        "name": "Dr. Carlos Mendes",
+        "crp": "06/123456",
+        "specialty": "Terapia Cognitivo-Comportamental",
+        "themes": ["Ansiedade", "Depressão", "Estresse"],
+        "bio": "Especialista em TCC com 10 anos de experiência",
+        "hourly_rate": 200.0,
         "is_active": true,
-        "created_at": "2025-01-01T10:00:00"
+        "created_at": "2025-01-10T09:00:00"
       }
     ],
     "count": 1
@@ -212,98 +471,245 @@ Lista todos os psicólogos.
 }
 \`\`\`
 
-### GET /api/psychologists/{id}
-Busca um psicólogo pelo ID.
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/api/psychologists
+curl http://localhost:5000/api/psychologists?active_only=true
+\`\`\`
 
-### POST /api/psychologists
-Cria um novo psicólogo.
+---
+
+#### `GET /api/psychologists/{id}`
+Busca um psicólogo específico pelo ID.
+
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Dr. Carlos Mendes",
+    "crp": "06/123456",
+    "specialty": "TCC",
+    "hourly_rate": 200.0,
+    "is_active": true
+  }
+}
+\`\`\`
+
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/api/psychologists/1
+\`\`\`
+
+---
+
+#### `POST /api/psychologists`
+Cria um novo psicólogo no sistema.
 
 **Request Body:**
 \`\`\`json
 {
-  "user_id": 1,
-  "name": "Dra. Ana Silva",
-  "crp": "06/12345",
-  "specialty": "TCC",
-  "themes": ["Ansiedade", "Depressão"],
-  "hourly_rate": 150.0,
-  "bio": "Especialista em TCC"
+  "user_id": 2,
+  "name": "Dra. Ana Paula",
+  "crp": "06/654321",
+  "specialty": "Psicanálise",
+  "themes": ["Relacionamentos", "Autoestima"],
+  "hourly_rate": 180.0,
+  "bio": "Psicanalista com formação na USP"
 }
 \`\`\`
 
 **Validações:**
-- CRP deve estar no formato XX/XXXXX
-- hourly_rate deve ser positivo
+- `crp`: Formato XX/XXXXX obrigatório
+- `hourly_rate`: Deve ser positivo
 
-### PUT /api/psychologists/{id}
+**Response (201):**
+\`\`\`json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Psicólogo criado com sucesso"
+}
+\`\`\`
+
+**Teste:**
+\`\`\`bash
+curl -X POST http://localhost:5000/api/psychologists \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 2,
+    "name": "Dra. Ana Paula",
+    "crp": "06/654321",
+    "specialty": "Psicanálise",
+    "hourly_rate": 180.0
+  }'
+\`\`\`
+
+---
+
+#### `PUT /api/psychologists/{id}`
 Atualiza os dados de um psicólogo.
 
 **Request Body:**
 \`\`\`json
 {
-  "specialty": "Psicanálise",
-  "hourly_rate": 180.0,
+  "specialty": "Terapia Sistêmica",
+  "hourly_rate": 220.0,
   "is_active": true
 }
 \`\`\`
 
-### DELETE /api/psychologists/{id}
-Remove um psicólogo do sistema.
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Psicólogo atualizado com sucesso"
+}
+\`\`\`
 
-### PATCH /api/psychologists/{id}/activate
-Ativa um psicólogo.
-
-### PATCH /api/psychologists/{id}/deactivate
-Desativa um psicólogo.
+**Teste:**
+\`\`\`bash
+curl -X PUT http://localhost:5000/api/psychologists/1 \
+  -H "Content-Type: application/json" \
+  -d '{"hourly_rate": 220.0}'
+\`\`\`
 
 ---
 
-## Clinics
+#### `DELETE /api/psychologists/{id}`
+Remove um psicólogo do sistema.
 
-### GET /api/clinics
-Lista todas as clínicas.
+**Response:** `204 No Content`
 
-### GET /api/clinics/{id}
-Busca uma clínica pelo ID.
+---
 
-### POST /api/clinics
+#### `PATCH /api/psychologists/{id}/activate`
+Ativa um psicólogo no sistema.
+
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Psicólogo ativado com sucesso"
+}
+\`\`\`
+
+**Teste:**
+\`\`\`bash
+curl -X PATCH http://localhost:5000/api/psychologists/1/activate
+\`\`\`
+
+---
+
+#### `PATCH /api/psychologists/{id}/deactivate`
+Desativa um psicólogo no sistema.
+
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Psicólogo desativado com sucesso"
+}
+\`\`\`
+
+**Teste:**
+\`\`\`bash
+curl -X PATCH http://localhost:5000/api/psychologists/1/deactivate
+\`\`\`
+
+---
+
+### Clínicas
+
+#### `GET /api/clinics`
+Lista todas as clínicas cadastradas.
+
+#### `GET /api/clinics/{id}`
+Busca uma clínica específica pelo ID.
+
+#### `POST /api/clinics`
 Cria uma nova clínica.
 
 **Request Body:**
 \`\`\`json
 {
-  "user_id": 1,
-  "name": "Clínica Saúde Mental",
-  "address": "Rua das Flores, 123",
+  "user_id": 2,
+  "name": "Clínica Bem-Estar",
+  "address": "Rua das Flores, 123 - São Paulo/SP",
   "phone": "(11) 3456-7890",
-  "email": "contato@clinica.com"
+  "email": "contato@bemespar.com"
 }
 \`\`\`
 
-### PUT /api/clinics/{id}
+#### `PUT /api/clinics/{id}`
 Atualiza os dados de uma clínica.
 
-### DELETE /api/clinics/{id}
+#### `DELETE /api/clinics/{id}`
 Remove uma clínica do sistema.
 
 ---
 
-## Availabilities
+### Disponibilidades
 
-### GET /api/availabilities
-Lista todas as disponibilidades.
+#### `GET /api/availabilities`
+Lista todas as disponibilidades cadastradas.
 
-**Query Params:**
-- `psychologist_id` (int): Filtrar por psicólogo
+**Query Parameters:**
+- `psychologist_id` (int): Filtrar por psicólogo específico
 
-### GET /api/availabilities/{id}
-Busca uma disponibilidade pelo ID.
+**Exemplo:** `/api/availabilities?psychologist_id=1`
 
-### GET /api/availabilities/psychologist/{psychologist_id}
-Lista todas as disponibilidades de um psicólogo.
+---
 
-### POST /api/availabilities
-Cria uma nova disponibilidade.
+#### `GET /api/availabilities/{id}`
+Busca uma disponibilidade específica pelo ID.
+
+---
+
+#### `GET /api/availabilities/psychologist/{psychologist_id}`
+Lista todas as disponibilidades de um psicólogo específico.
+
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "psychologist_id": 1,
+        "day_of_week": 0,
+        "start_time": "08:00:00",
+        "end_time": "12:00:00",
+        "is_active": true
+      },
+      {
+        "id": 2,
+        "psychologist_id": 1,
+        "day_of_week": 1,
+        "start_time": "14:00:00",
+        "end_time": "18:00:00",
+        "is_active": true
+      }
+    ],
+    "count": 2
+  }
+}
+\`\`\`
+
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/api/availabilities/psychologist/1
+\`\`\`
+
+---
+
+#### `POST /api/availabilities`
+Cria uma nova disponibilidade para um psicólogo.
 
 **Request Body:**
 \`\`\`json
@@ -316,17 +722,41 @@ Cria uma nova disponibilidade.
 \`\`\`
 
 **Validações:**
-- day_of_week: 0 (Segunda) a 6 (Domingo)
-- start_time/end_time: formato HH:MM
-- start_time deve ser anterior a end_time
+- `day_of_week`: 0 (Segunda) a 6 (Domingo)
+- `start_time`/`end_time`: Formato HH:MM
+- `start_time` deve ser anterior a `end_time`
 - Não pode haver sobreposição com disponibilidades existentes
 
-**Erros:**
-- 404: Psicólogo não encontrado
-- 409: Sobreposição de horários
+**Response (201):**
+\`\`\`json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Disponibilidade criada com sucesso"
+}
+\`\`\`
 
-### PUT /api/availabilities/{id}
-Atualiza uma disponibilidade.
+**Possíveis Erros:**
+- `404 Not Found`: Psicólogo não encontrado
+- `409 Conflict`: Sobreposição de horários
+- `400 Validation Error`: Dados inválidos
+
+**Teste:**
+\`\`\`bash
+curl -X POST http://localhost:5000/api/availabilities \
+  -H "Content-Type: application/json" \
+  -d '{
+    "psychologist_id": 1,
+    "day_of_week": 2,
+    "start_time": "14:00",
+    "end_time": "18:00"
+  }'
+\`\`\`
+
+---
+
+#### `PUT /api/availabilities/{id}`
+Atualiza uma disponibilidade existente.
 
 **Request Body:**
 \`\`\`json
@@ -337,41 +767,98 @@ Atualiza uma disponibilidade.
 }
 \`\`\`
 
-### DELETE /api/availabilities/{id}
+---
+
+#### `DELETE /api/availabilities/{id}`
 Remove uma disponibilidade do sistema.
 
-### PATCH /api/availabilities/{id}/activate
+---
+
+#### `PATCH /api/availabilities/{id}/activate`
 Ativa uma disponibilidade.
 
-### PATCH /api/availabilities/{id}/deactivate
+#### `PATCH /api/availabilities/{id}/deactivate`
 Desativa uma disponibilidade.
 
 ---
 
-## Appointments
+### Consultas
 
-### GET /api/appointments
-Lista todas as consultas.
+#### `GET /api/appointments`
+Lista todas as consultas agendadas.
 
-**Query Params:**
+**Query Parameters:**
 - `patient_id` (int): Filtrar por paciente
 - `psychologist_id` (int): Filtrar por psicólogo
 
-### GET /api/appointments/{id}
-Busca uma consulta pelo ID.
+**Exemplos:**
+- `/api/appointments?patient_id=3`
+- `/api/appointments?psychologist_id=1`
 
-### POST /api/appointments
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "patient_id": 3,
+        "psychologist_id": 1,
+        "date": "2025-12-01",
+        "time": "14:00:00",
+        "duration": 60,
+        "status": "scheduled",
+        "notes": "Primeira consulta",
+        "created_at": "2025-11-30T10:00:00"
+      }
+    ],
+    "count": 1
+  }
+}
+\`\`\`
+
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/api/appointments
+curl http://localhost:5000/api/appointments?patient_id=3
+\`\`\`
+
+---
+
+#### `GET /api/appointments/{id}`
+Busca uma consulta específica pelo ID.
+
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "patient_id": 3,
+    "psychologist_id": 1,
+    "date": "2025-12-01",
+    "time": "14:00:00",
+    "duration": 60,
+    "status": "scheduled"
+  }
+}
+\`\`\`
+
+---
+
+#### `POST /api/appointments`
 Agenda uma nova consulta.
 
 **Request Body:**
 \`\`\`json
 {
-  "patient_id": 1,
+  "patient_id": 3,
   "psychologist_id": 1,
   "date": "2025-12-08",
   "time": "14:00",
   "duration": 60,
-  "notes": "Primeira consulta"
+  "notes": "Consulta de acompanhamento"
 }
 \`\`\`
 
@@ -388,29 +875,48 @@ Agenda uma nova consulta.
 {
   "success": true,
   "data": {
-    "id": 1,
-    "patient_id": 1,
+    "id": 2,
+    "patient_id": 3,
     "psychologist_id": 1,
     "date": "2025-12-08",
     "time": "14:00:00",
     "duration": 60,
     "status": "scheduled",
-    "notes": "Primeira consulta"
+    "notes": "Consulta de acompanhamento"
   },
   "message": "Consulta agendada com sucesso"
 }
 \`\`\`
 
-**Erros:**
-- 404: Paciente ou psicólogo não encontrado
-- 409: Conflito de horário
-- 422: Psicólogo inativo ou sem disponibilidade
+**Possíveis Erros:**
+- `404 Not Found`: Paciente ou psicólogo não encontrado
+- `409 Conflict`: Conflito de horário
+- `422 Business Rule`: Psicólogo inativo ou sem disponibilidade
 
-### DELETE /api/appointments/{id}
+**Teste:**
+\`\`\`bash
+curl -X POST http://localhost:5000/api/appointments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_id": 3,
+    "psychologist_id": 1,
+    "date": "2025-12-08",
+    "time": "14:00",
+    "duration": 60
+  }'
+\`\`\`
+
+---
+
+#### `DELETE /api/appointments/{id}`
 Remove uma consulta do sistema.
 
-### PATCH /api/appointments/{id}/cancel
-Cancela uma consulta.
+**Response:** `204 No Content`
+
+---
+
+#### `PATCH /api/appointments/{id}/cancel`
+Cancela uma consulta agendada.
 
 **Request Body:**
 \`\`\`json
@@ -419,17 +925,56 @@ Cancela uma consulta.
 }
 \`\`\`
 
-**Erros:**
-- 422: Consulta já cancelada ou concluída
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "status": "cancelled",
+    "cancellation_reason": "Imprevisto pessoal"
+  },
+  "message": "Consulta cancelada com sucesso"
+}
+\`\`\`
 
-### PATCH /api/appointments/{id}/complete
+**Possíveis Erros:**
+- `404 Not Found`: Consulta não encontrada
+- `422 Business Rule`: Consulta já cancelada ou concluída
+
+**Teste:**
+\`\`\`bash
+curl -X PATCH http://localhost:5000/api/appointments/1/cancel \
+  -H "Content-Type: application/json" \
+  -d '{"cancellation_reason": "Imprevisto pessoal"}'
+\`\`\`
+
+---
+
+#### `PATCH /api/appointments/{id}/complete`
 Marca uma consulta como concluída.
 
-**Erros:**
-- 422: Consulta não pode ser concluída (status inválido)
+**Response (200):**
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "status": "completed"
+  },
+  "message": "Consulta concluída com sucesso"
+}
+\`\`\`
 
-### POST /api/appointments/available-slots
-Lista horários disponíveis para agendamento.
+**Teste:**
+\`\`\`bash
+curl -X PATCH http://localhost:5000/api/appointments/1/complete
+\`\`\`
+
+---
+
+#### `POST /api/appointments/available-slots`
+Lista horários disponíveis para agendamento em uma data específica.
 
 **Request Body:**
 \`\`\`json
@@ -447,43 +992,61 @@ Lista horários disponíveis para agendamento.
   "data": {
     "psychologist_id": 1,
     "date": "2025-12-08",
-    "available_times": ["08:00", "08:15", "09:00", "10:30"],
-    "count": 4
+    "available_times": [
+      "08:00",
+      "08:15",
+      "08:30",
+      "09:00",
+      "10:30",
+      "11:00"
+    ],
+    "count": 6
   }
 }
 \`\`\`
 
+**Teste:**
+\`\`\`bash
+curl -X POST http://localhost:5000/api/appointments/available-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "psychologist_id": 1,
+    "date": "2025-12-08",
+    "duration": 60
+  }'
+\`\`\`
+
 ---
 
-## Leads
+### Leads
 
-### GET /api/leads
-Lista todos os leads.
+#### `GET /api/leads`
+Lista todos os leads cadastrados.
 
-### GET /api/leads/{id}
-Busca um lead pelo ID.
+#### `GET /api/leads/{id}`
+Busca um lead específico pelo ID.
 
-### POST /api/leads
+#### `POST /api/leads`
 Cria um novo lead.
 
 **Request Body:**
 \`\`\`json
 {
-  "name": "Maria Silva",
-  "email": "maria@email.com",
+  "name": "Pedro Santos",
+  "email": "pedro@email.com",
   "phone": "(11) 91234-5678",
   "source": "website",
   "notes": "Interesse em terapia de casal"
 }
 \`\`\`
 
-### PUT /api/leads/{id}
+#### `PUT /api/leads/{id}`
 Atualiza os dados de um lead.
 
-### DELETE /api/leads/{id}
+#### `DELETE /api/leads/{id}`
 Remove um lead do sistema.
 
-### PATCH /api/leads/{id}/contacted
+#### `PATCH /api/leads/{id}/contacted`
 Marca um lead como contatado.
 
 **Request Body:**
@@ -493,7 +1056,7 @@ Marca um lead como contatado.
 }
 \`\`\`
 
-### PATCH /api/leads/{id}/lost
+#### `PATCH /api/leads/{id}/lost`
 Marca um lead como perdido.
 
 **Request Body:**
@@ -503,7 +1066,7 @@ Marca um lead como perdido.
 }
 \`\`\`
 
-### PATCH /api/leads/{id}/convert
+#### `PATCH /api/leads/{id}/convert`
 Converte um lead em paciente.
 
 **Request Body:**
@@ -513,14 +1076,14 @@ Converte um lead em paciente.
 }
 \`\`\`
 
-**Erros:**
-- 422: Lead já foi convertido anteriormente
+**Possíveis Erros:**
+- `422 Business Rule`: Lead já foi convertido
 
 ---
 
-## Health Check
+### Health Check
 
-### GET /health
+#### `GET /health`
 Verifica o status da API.
 
 **Response (200):**
@@ -535,12 +1098,126 @@ Verifica o status da API.
 }
 \`\`\`
 
+**Teste:**
+\`\`\`bash
+curl http://localhost:5000/health
+\`\`\`
+
 ---
 
-## Observações Gerais
+## Códigos de Status HTTP
 
-- Todas as respostas seguem o formato padronizado com `success`, `data` e opcionalmente `message` ou `error`
-- Datas no formato ISO 8601: `yyyy-mm-dd` ou `yyyy-mm-ddTHH:MM:SS`
-- Horários no formato: `HH:MM`
-- A autenticação está seedada com usuários prontos para teste
-- Códigos HTTP: 200 (OK), 201 (Created), 204 (No Content), 400 (Validation Error), 404 (Not Found), 409 (Conflict), 422 (Business Rule Violation)
+| Código | Nome | Significado | Quando Usar |
+|--------|------|-------------|-------------|
+| **200** | OK | Sucesso | GET, PUT, PATCH bem-sucedidos |
+| **201** | Created | Recurso criado | POST bem-sucedido |
+| **204** | No Content | Sucesso sem retorno | DELETE bem-sucedido |
+| **400** | Bad Request | Dados inválidos | Validação falhou |
+| **401** | Unauthorized | Não autenticado | Login inválido |
+| **404** | Not Found | Recurso não existe | ID inexistente |
+| **409** | Conflict | Conflito de recursos | Horário ocupado, email duplicado |
+| **422** | Unprocessable Entity | Regra de negócio violada | Psicólogo inativo, data inválida |
+| **500** | Internal Server Error | Erro no servidor | Exceção não tratada |
+
+---
+
+## Exemplos de Uso
+
+### Fluxo Completo: Agendar uma Consulta
+
+#### Passo 1: Listar psicólogos disponíveis
+\`\`\`bash
+curl http://localhost:5000/api/psychologists?active_only=true
+\`\`\`
+
+#### Passo 2: Verificar horários disponíveis
+\`\`\`bash
+curl -X POST http://localhost:5000/api/appointments/available-slots \
+  -H "Content-Type: application/json" \
+  -d '{
+    "psychologist_id": 1,
+    "date": "2025-12-10",
+    "duration": 60
+  }'
+\`\`\`
+
+#### Passo 3: Agendar a consulta
+\`\`\`bash
+curl -X POST http://localhost:5000/api/appointments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_id": 3,
+    "psychologist_id": 1,
+    "date": "2025-12-10",
+    "time": "14:00",
+    "duration": 60,
+    "notes": "Primeira consulta"
+  }'
+\`\`\`
+
+#### Passo 4: Confirmar o agendamento
+\`\`\`bash
+curl http://localhost:5000/api/appointments/2
+\`\`\`
+
+---
+
+### Fluxo: Gerenciar Disponibilidades
+
+#### Ver disponibilidades do psicólogo
+\`\`\`bash
+curl http://localhost:5000/api/availabilities/psychologist/1
+\`\`\`
+
+#### Adicionar nova disponibilidade
+\`\`\`bash
+curl -X POST http://localhost:5000/api/availabilities \
+  -H "Content-Type: application/json" \
+  -d '{
+    "psychologist_id": 1,
+    "day_of_week": 3,
+    "start_time": "13:00",
+    "end_time": "17:00"
+  }'
+\`\`\`
+
+#### Desativar disponibilidade
+\`\`\`bash
+curl -X PATCH http://localhost:5000/api/availabilities/3/deactivate
+\`\`\`
+
+---
+
+## Conceitos Importantes
+
+### Idempotência
+- **GET, PUT, DELETE**: Idempotentes (chamar múltiplas vezes = mesmo resultado)
+- **POST**: Não idempotente (cria novo recurso a cada chamada)
+
+### Stateless
+- Cada requisição é independente
+- Servidor não mantém estado de sessão
+- Cliente deve enviar todas as informações necessárias
+
+### Códigos Semânticos
+- Use o código HTTP correto para cada situação
+- Facilita tratamento de erros no cliente
+- Segue padrões REST universais
+
+---
+
+## Referências Adicionais
+
+- **Documentação de Arquitetura**: `ARCHITECTURE.md`
+- **Credenciais de Teste**: `CREDENCIAIS_TESTE.md`
+- **Horários Disponíveis**: `HORARIOS_DISPONIVEIS.md`
+- **Guia de Apresentação**: `APRESENTACAO.md`
+
+---
+
+## Suporte
+
+Para dúvidas ou problemas com a API, consulte o código-fonte em:
+- **Controllers**: `synapse/controllers/`
+- **Services**: `synapse/services/`
+- **Models**: `synapse/business_model/`
