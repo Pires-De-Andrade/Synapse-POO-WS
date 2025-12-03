@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Área do Psicólogo | Synapse{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <!-- Logo -->
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('index') }}" class="login-logo">
+                        <i class="bi bi-brain"></i>
+                        <span>Synapse</span>
+                    </a>
+                </div>
+
+                <div class="card card-vintage card-login">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="login-icon login-icon-psychologist">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <h3 class="login-title">Área do Psicólogo</h3>
+                            <p class="login-subtitle">Acesse sua agenda profissional</p>
+                        </div>
+
+                        <form action="{{ url_for('do_login') }}" method="POST">
+                            <input type="hidden" name="user_type" value="psychologist">
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="seu@email.com" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Sua senha" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-vintage-secondary w-100 mb-3">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                            </button>
+                        </form>
+
+                        <div class="text-center">
+                            <a href="{{ url_for('index') }}" class="btn-link-vintage">
+                                <i class="bi bi-arrow-left me-1"></i>Voltar ao início
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credenciais de teste -->
+                <div class="card card-vintage mt-3">
+                    <div class="card-body p-3">
+                        <p class="small text-muted mb-2"><i class="bi bi-info-circle me-1"></i>Credenciais de teste:</p>
+                        <code class="small d-block">Email: dr.carlos@synapse.com</code>
+                        <code class="small d-block">Senha: psi123</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
